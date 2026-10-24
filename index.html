@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Дашборд MAX</title>
+  <!-- MAX SDK -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    :root {
+      --bg: #ffffff;
+      --text: #1a1a1a;
+      --card-bg: #f5f6fa;
+      --primary: #2481cc;
+    }
+    body {
+      margin: 0;
+      padding: 12px;
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+    }
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    @media (max-width: 400px) {
+      .dashboard-grid { grid-template-columns: 1fr; }
+    }
+    .card {
+      background: var(--card-bg);
+      padding: 16px;
+      border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    }
+    h2 { margin: 0 0 8px 0; font-size: 1rem; color: var(--text); }
+    .value { font-weight: 700; font-size: 1.3rem; }
+    .label { font-size: 0.85rem; color: #666; }
+    .loading { color: #666; text-align: center; padding: 24px; }
+    .error { color: #d32f2f; text-align: center; padding: 24px; }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div class="loading">Загрузка дашборда…</div>
+  </div>
+
+  <script>
+    const tg = window.Telegram.WebApp;
+    tg.ready();
+
+    // Адаптация темы (светлая/тёмная)
+    if (tg.colorScheme === 'dark') {
+      document.documentElement.style.setProperty('--bg', '#121212');
+      document.documentElement.style.setProperty('--text', '#e0e0e0');
+      document.documentElement.style.setProperty('--card-bg', '#212121');
+      document.documentElement.style.setProperty('--primary', '#4fc3f7');
+    }
+
+    async function fetchDashboardData() {
+      // Замените URL на свой API. Для MVP можно отдавать JSON-файл с данными.
+      try {
+        const res = await fetch('/data.json'); // например, на хостинге
+        if (!res.ok) throw new Error('Ошибка сети');
+        return await res.json();
+      } catch (e) {
+        console.error(e);
+        return null;
+      }
+    }
+
+    function render(data) {
+      const container = document.getElementById('app');
+      if (!data) {
+        container.innerHTML = '<div class="error">Не удалось загрузить данные</div>';
+        return;
+      }
+      container.innerHTML = `
+        <div class="dashboard-grid">
+          <div class="card">
+            <h2>Выручка</h2>
+            <div class="value">${data.revenue}</div>
+            <div class="label">за текущий месяц</div>
+          </div>
+          <div class="card">
+            <h2>Заказы</h2>
+            <div class="value">${data.orders}</div>
+            <div class="label">всего</div>
+          </div>
+          <div class="card">
+            <h2>Конверсия</h2>
+            <div class="value">${data.conversion}%</div>
+            <div class="label">в заказы</div>
+          </div>
+          <div class="card">
+            <h2>Средний чек</h2>
+            <div class="value">${data.avgCheck}</div>
+            <div class="label">руб.</div>
+          </div>
+        </div>
+      `;
+    }
+
+    (async () => {
+      const data = await fetchDashboardData();
+      render(data);
+    })();
+  </script>
+</body>
+</html>
